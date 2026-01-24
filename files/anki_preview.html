@@ -1,0 +1,214 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ankiカードプレビュー - AWS SAP-C02</title>
+<style>
+.card {
+ font-family: "Hiragino Kaku Gothic Pro", "メイリオ", Meiryo, "MS PGothic", arial, sans-serif;
+ font-size: 15px;
+ text-align: left;
+ color: #333;
+ background-color: white;
+ padding: 20px;
+ line-height: 1.6;
+ max-width: 900px;
+ margin: 20px auto;
+ box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+ border-radius: 8px;
+}
+
+.question {
+ font-size: 17px;
+ margin-bottom: 20px;
+ padding: 15px;
+ background-color: #f5f5f5;
+ border-left: 4px solid #2196F3;
+ border-radius: 3px;
+}
+
+.question b {
+ color: #1976D2;
+ font-size: 18px;
+}
+
+.choices {
+ margin-top: 15px;
+}
+
+.choice {
+ margin: 8px 0;
+ padding: 12px;
+ border-left: 3px solid #ddd;
+ background-color: #fafafa;
+ line-height: 1.6;
+}
+
+.choice.correct {
+ border-left: 4px solid #4CAF50;
+ background-color: #e8f5e9;
+ font-weight: bold;
+}
+
+.choice b {
+ color: #1976D2;
+ margin-right: 8px;
+}
+
+.answer {
+ font-size: 20px;
+ color: #4CAF50;
+ font-weight: bold;
+ margin-top: 25px;
+ padding: 15px;
+ background-color: #e8f5e9;
+ border-radius: 5px;
+ border-left: 4px solid #4CAF50;
+}
+
+.community-vote {
+ margin-top: 15px;
+ padding: 10px;
+ font-size: 13px;
+ color: #666;
+ background-color: #f9f9f9;
+ border-left: 3px solid #999;
+ border-radius: 3px;
+}
+
+hr {
+ margin: 25px 0;
+ border: none;
+ border-top: 2px solid #e0e0e0;
+}
+
+.card-label {
+ background-color: #2196F3;
+ color: white;
+ padding: 10px;
+ margin: 30px auto 0;
+ max-width: 900px;
+ text-align: center;
+ font-weight: bold;
+ border-radius: 5px 5px 0 0;
+}
+
+body {
+ background-color: #f0f0f0;
+ margin: 0;
+ padding: 20px;
+}
+
+h1 {
+ text-align: center;
+ color: #1976D2;
+ margin-bottom: 30px;
+}
+</style>
+</head>
+<body>
+
+<h1>Ankiカードプレビュー - AWS SAP-C02</h1>
+<p style="text-align: center; color: #666;">最初の3問のサンプル表示</p>
+
+<div class="card-label">カード 1 - 表面（Front）</div>
+<div class="card">
+<div class="question"><b>問題 1</b><br><br>ある企業は、ハイブリッドDNSソリューションを設計する必要があります。このソリューションでは、ドメイン cloud.example.com
+にAmazon Route 53 プライベートホストゾーンを使⽤し、VPC内に保存されるリソースに使⽤します。
+この企業のDNS解決要件は次のとおりです。
+オンプレミスシステムはcloud.example.comに名前解決して接続できること。
+すべてのVPCがcloud.example.comに名前解決できること。
+オンプレミスの企業ネットワークとAWS Transit Gatewayの間には、既にAWS Direct Connect接続が確⽴されています。
+これらの要件を最⾼のパフォーマンスで満たすには、どのアーキテクチャを使⽤すべきでしょうか？</div><br>
+<div class="choices">
+<div class="choice"><b>A.</b> プライベートホストゾーンをすべてのVPCに関連付けます。共有サービスVPCにRoute 53インバウンドリゾルバーを作成しま す。すべてのVPCをトランジットゲートウェイにアタッチし、cloud.example.comのオンプレミスDNSサーバーに、インバウンド リゾルバーを指す転送ルールを作成します。</div>
+<div class="choice"><b>B.</b> プライベートホストゾーンをすべてのVPCに関連付けます。共有サービスVPCにAmazon EC2条件付きフォワーダーをデプロイ します。すべてのVPCをトランジットゲートウェイにアタッチし、オンプレミスDNSサーバーにcloud.example.comの条件付きフ ォワーダーを指す転送ルールを作成します。</div>
+<div class="choice"><b>C.</b> プライベートホストゾーンを共有サービス VP に関連付け、共有サービス VP に Route 53 アウトバウンドリゾルバーを作成し ます。すべての VPC をトランジットゲートウェイに接続し、アウトバウンドリゾルバーを指す cloud.example.com のオンプレ ミス DNS サーバーに転送ルールを作成します。</div>
+<div class="choice"><b>D.</b> プライベートホストゾーンを共有サービス VPC に関連付けます。共有サービス VPC に Route 53 インバウンドリゾルバーを作 成します。共有サービス VPC をトランジットゲートウェイに接続し、cloud.example.com のオンプレミス DNS サーバーに、イ ンバウンドリゾルバーを指す転送ルールを作成します。</div>
+</div>
+</div>
+<div class="card-label">カード 1 - 裏面（Back）- 正解がハイライト表示されます</div>
+<div class="card">
+<div class="question"><b>問題 1</b><br><br>ある企業は、ハイブリッドDNSソリューションを設計する必要があります。このソリューションでは、ドメイン cloud.example.com
+にAmazon Route 53 プライベートホストゾーンを使⽤し、VPC内に保存されるリソースに使⽤します。
+この企業のDNS解決要件は次のとおりです。
+オンプレミスシステムはcloud.example.comに名前解決して接続できること。
+すべてのVPCがcloud.example.comに名前解決できること。
+オンプレミスの企業ネットワークとAWS Transit Gatewayの間には、既にAWS Direct Connect接続が確⽴されています。
+これらの要件を最⾼のパフォーマンスで満たすには、どのアーキテクチャを使⽤すべきでしょうか？</div><br>
+<div class="choices">
+<div class="choice correct"><b>A.</b> プライベートホストゾーンをすべてのVPCに関連付けます。共有サービスVPCにRoute 53インバウンドリゾルバーを作成しま す。すべてのVPCをトランジットゲートウェイにアタッチし、cloud.example.comのオンプレミスDNSサーバーに、インバウンド リゾルバーを指す転送ルールを作成します。</div>
+<div class="choice"><b>B.</b> プライベートホストゾーンをすべてのVPCに関連付けます。共有サービスVPCにAmazon EC2条件付きフォワーダーをデプロイ します。すべてのVPCをトランジットゲートウェイにアタッチし、オンプレミスDNSサーバーにcloud.example.comの条件付きフ ォワーダーを指す転送ルールを作成します。</div>
+<div class="choice"><b>C.</b> プライベートホストゾーンを共有サービス VP に関連付け、共有サービス VP に Route 53 アウトバウンドリゾルバーを作成し ます。すべての VPC をトランジットゲートウェイに接続し、アウトバウンドリゾルバーを指す cloud.example.com のオンプレ ミス DNS サーバーに転送ルールを作成します。</div>
+<div class="choice"><b>D.</b> プライベートホストゾーンを共有サービス VPC に関連付けます。共有サービス VPC に Route 53 インバウンドリゾルバーを作 成します。共有サービス VPC をトランジットゲートウェイに接続し、cloud.example.com のオンプレミス DNS サーバーに、イ ンバウンドリゾルバーを指す転送ルールを作成します。</div>
+</div>
+<div class="answer">正解: <b>A</b></div>
+<div class="community-vote">コミュニティ投票: A（80％） D（20％）</div>
+</div>
+<div class="card-label">カード 2 - 表面（Front）</div>
+<div class="card">
+<div class="question"><b>問題 2</b><br><br>ある企業が、RESTベースのAPIを介して複数の顧客に気象データを提供しています。このAPIはAmazon API Gatewayでホストされて
+おり、APIオペレーションごとに異なるAWS Lambda関数と統合されています。同社はDNSにAmazon Route 53を使⽤し、
+weather.example.comのリソースレコードを作成しています。APIのデータはAmazon DynamoDBテーブルに保存されています。同社
+は、APIを別のAWSリージョンにフェイルオーバーできるソリューションを必要としています。
+これらの要件を満たすソリューションはどれでしょうか？</div><br>
+<div class="choices">
+<div class="choice"><b>A.</b> 新しいリージョンに新しいLambda関数セットをデプロイします。API Gateway APIを更新し、エッジ最適化されたAPIエンド ポイントを使⽤して、両リージョンのLambda関数をターゲットとして使⽤します。DynamoDBテーブルをグローバルテーブルに 変換します。</div>
+<div class="choice"><b>B.</b> 別のリージョンに新しい API Gateway API と Lambda 関数をデプロイします。Route 53 DNS レコードを複数値レスポンスに変 更します。両⽅の API Gateway API をレスポンスに追加します。ターゲットのヘルスモニタリングを有効にします。DynamoDB テーブルをグローバルテーブルに変換します。</div>
+<div class="choice"><b>C.</b> Deploy a new API Gateway API and Lambda functions in another Region. Change the Route 53 DNS record to a failover record. Enable target health monitoring. Convert the DynamoDB tables to global tables.</div>
+<div class="choice"><b>D.</b> Deploy a new API Gateway API in a new Region. Change the Lambda functions to global functions. Change the Route 53 DNS record to a multivalue answer. Add both API Gateway APIs to the answer. Enable target health monitoring. Convert the DynamoDB tables to global tables.</div>
+</div>
+</div>
+<div class="card-label">カード 2 - 裏面（Back）- 正解がハイライト表示されます</div>
+<div class="card">
+<div class="question"><b>問題 2</b><br><br>ある企業が、RESTベースのAPIを介して複数の顧客に気象データを提供しています。このAPIはAmazon API Gatewayでホストされて
+おり、APIオペレーションごとに異なるAWS Lambda関数と統合されています。同社はDNSにAmazon Route 53を使⽤し、
+weather.example.comのリソースレコードを作成しています。APIのデータはAmazon DynamoDBテーブルに保存されています。同社
+は、APIを別のAWSリージョンにフェイルオーバーできるソリューションを必要としています。
+これらの要件を満たすソリューションはどれでしょうか？</div><br>
+<div class="choices">
+<div class="choice"><b>A.</b> 新しいリージョンに新しいLambda関数セットをデプロイします。API Gateway APIを更新し、エッジ最適化されたAPIエンド ポイントを使⽤して、両リージョンのLambda関数をターゲットとして使⽤します。DynamoDBテーブルをグローバルテーブルに 変換します。</div>
+<div class="choice"><b>B.</b> 別のリージョンに新しい API Gateway API と Lambda 関数をデプロイします。Route 53 DNS レコードを複数値レスポンスに変 更します。両⽅の API Gateway API をレスポンスに追加します。ターゲットのヘルスモニタリングを有効にします。DynamoDB テーブルをグローバルテーブルに変換します。</div>
+<div class="choice correct"><b>C.</b> Deploy a new API Gateway API and Lambda functions in another Region. Change the Route 53 DNS record to a failover record. Enable target health monitoring. Convert the DynamoDB tables to global tables.</div>
+<div class="choice"><b>D.</b> Deploy a new API Gateway API in a new Region. Change the Lambda functions to global functions. Change the Route 53 DNS record to a multivalue answer. Add both API Gateway APIs to the answer. Enable target health monitoring. Convert the DynamoDB tables to global tables.</div>
+</div>
+<div class="answer">正解: <b>C</b></div>
+<div class="community-vote">コミュニティ投票: C (96%) 2%</div>
+</div>
+<div class="card-label">カード 3 - 表面（Front）</div>
+<div class="card">
+<div class="question"><b>問題 3</b><br><br>A company uses AWS Organizations with a single OU named Production to manage multiple accounts. All accounts are members of the
+Production OU. Administrators use deny list SCPs in the root of the organization to manage access to restricted services.
+The company recently acquired a new business unit and invited the new unit’s existing AWS account to the organization. Once onboarded, the
+administrators of the new business unit discovered that they are not able to update existing AWS Config rules to meet the company’s policies.
+Which option will allow administrators to make changes and continue to enforce the current policies without introducing additional long-term
+maintenance?</div><br>
+<div class="choices">
+<div class="choice"><b>A.</b> Remove the organization’s root SCPs that limit access to AWS Config. Create AWS Service Catalog products for the company’s standard AWS Config rules and deploy them throughout the organization, including the new account.</div>
+<div class="choice"><b>B.</b> Create a temporary OU named Onboarding for the new account. Apply an SCP to the Onboarding OU to allow AWS Config actions. Move the new account to the Production OU when adjustments to AWS Config are complete.</div>
+<div class="choice"><b>C.</b> Convert the organization’s root SCPs from deny list SCPs to allow list SCPs to allow the required services only. Temporarily apply an SCP to the organization’s root that allows AWS Config actions for principals only in the new account.</div>
+<div class="choice"><b>D.</b> Create a temporary OU named Onboarding for the new account. Apply an SCP to the Onboarding OU to allow AWS Config actions. Move the organization’s root SCP to the Production OU. Move the new account to the Production OU when adjustments to AWS Config are complete.</div>
+</div>
+</div>
+<div class="card-label">カード 3 - 裏面（Back）- 正解がハイライト表示されます</div>
+<div class="card">
+<div class="question"><b>問題 3</b><br><br>A company uses AWS Organizations with a single OU named Production to manage multiple accounts. All accounts are members of the
+Production OU. Administrators use deny list SCPs in the root of the organization to manage access to restricted services.
+The company recently acquired a new business unit and invited the new unit’s existing AWS account to the organization. Once onboarded, the
+administrators of the new business unit discovered that they are not able to update existing AWS Config rules to meet the company’s policies.
+Which option will allow administrators to make changes and continue to enforce the current policies without introducing additional long-term
+maintenance?</div><br>
+<div class="choices">
+<div class="choice"><b>A.</b> Remove the organization’s root SCPs that limit access to AWS Config. Create AWS Service Catalog products for the company’s standard AWS Config rules and deploy them throughout the organization, including the new account.</div>
+<div class="choice"><b>B.</b> Create a temporary OU named Onboarding for the new account. Apply an SCP to the Onboarding OU to allow AWS Config actions. Move the new account to the Production OU when adjustments to AWS Config are complete.</div>
+<div class="choice"><b>C.</b> Convert the organization’s root SCPs from deny list SCPs to allow list SCPs to allow the required services only. Temporarily apply an SCP to the organization’s root that allows AWS Config actions for principals only in the new account.</div>
+<div class="choice correct"><b>D.</b> Create a temporary OU named Onboarding for the new account. Apply an SCP to the Onboarding OU to allow AWS Config actions. Move the organization’s root SCP to the Production OU. Move the new account to the Production OU when adjustments to AWS Config are complete.</div>
+</div>
+<div class="answer">正解: <b>D</b></div>
+<div class="community-vote">コミュニティ投票: D (68%) B (26%) 6%</div>
+</div>
+
+</body>
+</html>
