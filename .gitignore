@@ -19,8 +19,19 @@ venv/
 *.swp
 *.swo
 
-# Node.js (if any)
+# Node.js
 node_modules/
+dist/
+*.tsbuildinfo
+
+# Old files (safe to delete)
+_old/
+
+# Server data (user progress - SQLite)
+server/data/
+*.db
+*.db-wal
+*.db-shm
 
 # Temporary files
 *.tmp

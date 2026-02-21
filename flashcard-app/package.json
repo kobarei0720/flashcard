@@ -1,0 +1,32 @@
+{
+  "name": "flashcard-app",
+  "version": "1.0.0",
+  "description": "AWS SAP-C02試験対策用のAnki風フラッシュカードアプリケーション",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently -n server,client -c blue,green \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:server": "nodemon server/index.js",
+    "dev:client": "vite",
+    "build": "vite build",
+    "start": "node server/index.js",
+    "preview": "vite preview",
+    "convert": "node scripts/convert_csv_to_json.js"
+  },
+  "keywords": [
+    "flashcard",
+    "aws",
+    "sap-c02"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "better-sqlite3": "^12.6.2",
+    "cors": "^2.8.5",
+    "express": "^5.1.0"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "nodemon": "^3.1.9",
+    "vite": "^6.2.2"
+  }
+}

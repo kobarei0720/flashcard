@@ -1,8 +1,12 @@
 /**
  * AWS SAP-C02 フラッシュカード - メインアプリケーション
+ * ES Modules版
  */
 
-class FlashcardApp {
+import * as Storage from './storage.js';
+import { fetchQuestions } from './api.js';
+
+export class FlashcardApp {
     constructor() {
         this.questions = [];
         this.currentQuestion = null;
@@ -10,12 +14,15 @@ class FlashcardApp {
         this.selectedChoices = [];
         this.isAnswered = false;
         this.questionHistory = [];
-        this.displayToOriginalMap = {}; // 表示ラベル→元のラベルのマッピング
-
-        this.init();
+        this.displayToOriginalMap = {};
     }
 
+    /**
+     * アプリケーションを初期化
+     */
     async init() {
+        // サーバーから学習データを同期
+        await Storage.syncFromServer();
         await this.loadQuestions();
         this.bindEvents();
         this.updateStats();
@@ -24,17 +31,16 @@ class FlashcardApp {
     }
 
     /**
-     * 問題データを読み込む
+     * 問題データを読み込む（API経由）
      */
     async loadQuestions() {
         try {
-            const response = await fetch('data/questions.json');
-            const data = await response.json();
+            const data = await fetchQuestions();
             this.questions = data.questions;
             document.getElementById('total-count').textContent = this.questions.length;
         } catch (error) {
             console.error('問題データの読み込みに失敗しました:', error);
-            this.showError('問題データの読み込みに失敗しました。data/questions.jsonを確認してください。');
+            this.showError('問題データの読み込みに失敗しました。サーバーの起動状態を確認してください。');
         }
     }
 
@@ -69,21 +75,21 @@ class FlashcardApp {
 
         // 設定変更
         document.getElementById('prioritize-marked').addEventListener('change', (e) => {
-            StorageManager.updateSettings({ prioritizeMarked: e.target.checked });
+            Storage.updateSettings({ prioritizeMarked: e.target.checked });
         });
 
         document.getElementById('shuffle-choices').addEventListener('change', (e) => {
-            StorageManager.updateSettings({ shuffleChoices: e.target.checked });
+            Storage.updateSettings({ shuffleChoices: e.target.checked });
         });
 
         document.getElementById('marked-frequency').addEventListener('change', (e) => {
-            StorageManager.updateSettings({ markedFrequency: parseInt(e.target.value) });
+            Storage.updateSettings({ markedFrequency: parseInt(e.target.value) });
         });
 
         // リセットボタン
-        document.getElementById('reset-progress').addEventListener('click', () => {
+        document.getElementById('reset-progress').addEventListener('click', async () => {
             if (confirm('すべての進捗データをリセットしますか？この操作は取り消せません。')) {
-                StorageManager.reset();
+                await Storage.reset();
                 this.updateStats();
                 this.showNextQuestion();
             }
@@ -91,7 +97,7 @@ class FlashcardApp {
 
         // エクスポートボタン
         document.getElementById('export-data').addEventListener('click', () => {
-            StorageManager.export();
+            Storage.exportData();
         });
 
         // 原文表示ボタン
@@ -104,7 +110,7 @@ class FlashcardApp {
             btn.addEventListener('click', (e) => {
                 document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
                 e.target.classList.add('active');
-                StorageManager.setFilter(e.target.dataset.filter);
+                Storage.setFilter(e.target.dataset.filter);
                 this.showNextQuestion();
             });
         });
@@ -114,13 +120,13 @@ class FlashcardApp {
      * 設定を読み込んでUIに反映
      */
     loadSettings() {
-        const settings = StorageManager.getSettings();
+        const settings = Storage.getSettings();
         document.getElementById('prioritize-marked').checked = settings.prioritizeMarked;
         document.getElementById('shuffle-choices').checked = settings.shuffleChoices;
         document.getElementById('marked-frequency').value = settings.markedFrequency;
 
         // 現在のフィルターを反映
-        const currentFilter = StorageManager.getFilter();
+        const currentFilter = Storage.getFilter();
         document.querySelectorAll('.filter-btn').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.filter === currentFilter);
         });
@@ -132,10 +138,10 @@ class FlashcardApp {
     getNextQuestion() {
         if (this.questions.length === 0) return null;
 
-        const settings = StorageManager.getSettings();
-        const currentFilter = StorageManager.getFilter();
-        const markedIds = StorageManager.getMarkedQuestions();
-        const incorrectIds = StorageManager.getIncorrectQuestions();
+        const settings = Storage.getSettings();
+        const currentFilter = Storage.getFilter();
+        const markedIds = Storage.getMarkedQuestions();
+        const incorrectIds = Storage.getIncorrectQuestions();
 
         // フィルターに基づいて問題をフィルタリング
         let filteredQuestions = this.questions;
@@ -148,12 +154,11 @@ class FlashcardApp {
                 filteredQuestions = this.questions.filter(q => incorrectIds.includes(q.id));
                 break;
             case 'unseen':
-                filteredQuestions = this.questions.filter(q => StorageManager.isUnanswered(q.id));
+                filteredQuestions = this.questions.filter(q => Storage.isUnanswered(q.id));
                 break;
         }
 
         if (filteredQuestions.length === 0) {
-            // フィルター条件に合う問題がない場合
             if (currentFilter !== 'all') {
                 return null;
             }
@@ -161,7 +166,7 @@ class FlashcardApp {
         }
 
         // 重み付き配列を作成
-        let weightedQuestions = [];
+        const weightedQuestions = [];
 
         filteredQuestions.forEach(q => {
             let weight = 1;
@@ -170,7 +175,6 @@ class FlashcardApp {
                 weight = settings.markedFrequency;
             }
 
-            // 間違えた問題も重みを増やす
             if (incorrectIds.includes(q.id)) {
                 weight += 1;
             }
@@ -227,7 +231,7 @@ class FlashcardApp {
      * 問題をレンダリング
      */
     renderQuestion(question) {
-        const settings = StorageManager.getSettings();
+        const settings = Storage.getSettings();
 
         // 問題番号
         document.getElementById('question-number').textContent = `問題 ${question.id}`;
@@ -236,7 +240,7 @@ class FlashcardApp {
         document.getElementById('question-text').textContent = question.question;
 
         // マーク状態
-        const isMarked = StorageManager.isMarked(question.id);
+        const isMarked = Storage.isMarked(question.id);
         const markBtn = document.getElementById('mark-btn');
         const questionCard = document.getElementById('question-card');
         markBtn.classList.toggle('active', isMarked);
@@ -267,9 +271,9 @@ class FlashcardApp {
             choiceEl.dataset.displayLabel = displayLabel;
             choiceEl.dataset.originalLabel = originalLabel;
             choiceEl.innerHTML = `
-                <span class="choice-label">${displayLabel}</span>
-                <span class="choice-text">${choice.text}</span>
-            `;
+        <span class="choice-label">${displayLabel}</span>
+        <span class="choice-text">${choice.text}</span>
+      `;
             choiceEl.addEventListener('click', () => this.selectChoice(displayLabel, choiceEl));
             choicesContainer.appendChild(choiceEl);
         });
@@ -320,7 +324,6 @@ class FlashcardApp {
         this.isAnswered = true;
 
         const answer = this.currentQuestion.answer;
-        // 複数回答の形式に対応: "A, D, F" (カンマ区切り) と "ADF" (連結文字列) の両方をサポート
         const correctAnswers = answer.includes(',')
             ? answer.split(',').map(a => a.trim())
             : answer.split('').filter(a => a.trim() !== '');
@@ -334,7 +337,7 @@ class FlashcardApp {
         const isCorrect = JSON.stringify(userOriginalAnswers) === JSON.stringify(sortedCorrect);
 
         // 回答を記録
-        StorageManager.recordAnswer(this.currentQuestion.id, isCorrect);
+        Storage.recordAnswer(this.currentQuestion.id, isCorrect);
 
         // 結果を表示
         this.showResult(isCorrect, correctAnswers);
@@ -369,7 +372,7 @@ class FlashcardApp {
             if (correctAnswers.includes(originalLabel)) {
                 correctChoiceInfos.push({
                     displayLabel,
-                    text: choiceText
+                    text: choiceText,
                 });
             }
         });
@@ -377,7 +380,6 @@ class FlashcardApp {
         // 正解を表示（ラベルと選択肢のテキスト）
         if (correctChoiceInfos.length > 0) {
             const correctLabels = correctChoiceInfos.map(info => info.displayLabel).sort().join(', ');
-            // 正解のラベルと各選択肢のテキストを表示
             let correctHtml = `<div class="correct-answer-header">正解: ${correctLabels}</div>`;
             correctHtml += '<div class="correct-answer-details">';
             correctChoiceInfos.forEach(info => {
@@ -386,7 +388,6 @@ class FlashcardApp {
             correctHtml += '</div>';
             correctAnswer.innerHTML = correctHtml;
         } else {
-            // フォールバック: 元のラベルを表示
             correctAnswer.textContent = `正解: ${correctAnswers.join(', ')}`;
         }
 
@@ -429,8 +430,8 @@ class FlashcardApp {
      * 統計情報を更新
      */
     updateStats() {
-        const stats = StorageManager.getStats();
-        const markedCount = StorageManager.getMarkedQuestions().length;
+        const stats = Storage.getStats();
+        const markedCount = Storage.getMarkedQuestions().length;
 
         document.getElementById('progress-count').textContent = stats.totalAnswered;
         document.getElementById('marked-count').textContent = markedCount;
@@ -444,10 +445,10 @@ class FlashcardApp {
     /**
      * マークを切り替え
      */
-    toggleMark() {
+    async toggleMark() {
         if (!this.currentQuestion) return;
 
-        const isNowMarked = StorageManager.toggleMark(this.currentQuestion.id);
+        const isNowMarked = await Storage.toggleMark(this.currentQuestion.id);
 
         const markBtn = document.getElementById('mark-btn');
         const questionCard = document.getElementById('question-card');
@@ -470,8 +471,3 @@ class FlashcardApp {
         return shuffled;
     }
 }
-
-// アプリケーションを起動
-document.addEventListener('DOMContentLoaded', () => {
-    new FlashcardApp();
-});
