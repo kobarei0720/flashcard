@@ -1,9 +1,11 @@
 import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 import path from 'path';
 
 export default defineConfig({
   root: 'src',
   publicDir: '../public',
+  plugins: [react()],
   build: {
     outDir: '../dist',
     emptyOutDir: true,
@@ -21,5 +23,10 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, 'src'),
     },
+  },
+  test: {
+    globals: true,
+    environment: 'happy-dom',
+    setupFiles: './setupTests.js',
   },
 });
