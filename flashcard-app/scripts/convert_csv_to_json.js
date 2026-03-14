@@ -121,7 +121,7 @@ function parseCSV(content) {
  */
 async function main() {
     const csvPath = path.join(PROJECT_ROOT, '..', 'aws_sap_anki.csv');
-    const outputPath = path.join(PROJECT_ROOT, 'src', 'data', 'questions.json');
+    const outputPath = path.join(PROJECT_ROOT, 'server', 'data', 'questions.json');
 
     console.log(`📖 CSVファイル読み込み: ${csvPath}`);
 

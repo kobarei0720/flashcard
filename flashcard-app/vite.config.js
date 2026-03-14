@@ -4,6 +4,7 @@ import path from 'path';
 
 export default defineConfig({
   root: 'src',
+  cacheDir: '../node_modules/.vite',
   publicDir: '../public',
   plugins: [react()],
   build: {

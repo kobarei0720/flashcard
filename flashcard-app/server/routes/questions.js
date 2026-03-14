@@ -17,7 +17,7 @@ let questionsCache = null;
 async function loadQuestions() {
     if (questionsCache) return questionsCache;
 
-    const dataPath = path.join(__dirname, '..', '..', 'src', 'data', 'questions.json');
+    const dataPath = path.join(__dirname, '..', 'data', 'questions.json');
     const rawData = await fs.readFile(dataPath, 'utf-8');
     questionsCache = JSON.parse(rawData);
     return questionsCache;
