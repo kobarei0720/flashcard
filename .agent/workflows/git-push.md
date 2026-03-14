@@ -25,10 +25,7 @@ description: 修正後のGit push手順（自動実行）
 ```text
 [カテゴリ] 変更概要
 
-- 変更点1
-- 変更点2
-
-Co-authored-by: gemini-code-assist[bot] <176961590+gemini-code-assist[bot]@users.noreply.github.com>
+Co-authored-by: Antigravity (Gemini 1.5 Pro) <176961590+gemini-code-assist[bot]@users.noreply.github.com>
 ```
 
 カテゴリ例: `feat`, `fix`, `refactor`, `docs`, `chore`, `style`
