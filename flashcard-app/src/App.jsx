@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import * as api from './js/api.js';
+import * as api from './apiClient.js';
 
 function App() {
   const [questions, setQuestions] = useState([]);
@@ -11,9 +11,11 @@ function App() {
   const [displayToOriginalMap, setDisplayToOriginalMap] = useState({});
   const [questionHistory, setQuestionHistory] = useState([]);
   const [showOriginal, setShowOriginal] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
-    async function loadData() {
+    const loadData = async () => {
       try {
         const [qData, pData] = await Promise.all([
           api.fetchQuestions(),
@@ -28,9 +30,46 @@ function App() {
       } catch (error) {
         console.error('Failed to load data', error);
       }
-    }
+    };
     loadData();
   }, []);
+
+  const handleFileUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (!window.confirm('現在のすべての進捗データがリセットされます。インポートしてよろしいですか？')) {
+      event.target.value = '';
+      return;
+    }
+
+    setUploading(true);
+    try {
+      await api.uploadQuestions(file);
+      await api.resetProgress();
+      alert('インポート成功しました！ページを再読み込みします。');
+      window.location.reload();
+    } catch (e) {
+      alert(`インポートに失敗しました: ${e.message}`);
+    } finally {
+      setUploading(false);
+      event.target.value = '';
+    }
+  };
+
+  const handleReset = async () => {
+    if (!window.confirm('すべての回答進捗とマークをリセットしますか？この操作は取り消せません。')) {
+      return;
+    }
+
+    try {
+      await api.resetProgress();
+      alert('リセットしました。');
+      window.location.reload();
+    } catch (e) {
+      alert(`リセットに失敗しました: ${e.message}`);
+    }
+  };
 
   const setupChoices = (question, shuffle) => {
     let choices = [...question.choices];
@@ -150,8 +189,54 @@ function App() {
             <span className="stat-label">マーク:</span>
             <span id="marked-count">{progress.markedQuestions.length}</span>
           </span>
+          <button className="settings-toggle" onClick={() => setShowSettings(!showSettings)}>
+            ⚙️ 設定
+          </button>
         </div>
       </header>
+
+      <div 
+        className={`settings-overlay ${showSettings ? 'open' : ''}`} 
+        onClick={() => setShowSettings(false)}
+      ></div>
+      <aside className={`settings-panel ${showSettings ? 'open' : ''}`}>
+        <div className="settings-content">
+          <div className="settings-header">
+            <h2>設定</h2>
+            <button className="close-btn" onClick={() => setShowSettings(false)}>✕</button>
+          </div>
+          
+          <section className="settings-section">
+            <h3>データ管理</h3>
+            <div className="setting-item">
+              <button className="control-btn danger" style={{width: '100%'}} onClick={handleReset}>
+                進捗とマークをリセット
+              </button>
+            </div>
+          </section>
+
+          <section className="settings-section">
+            <h3>インポート</h3>
+            <p className="settings-description">
+               CSVフォーマット:<br/>問題文, 正解, 解説, 選択肢A, 選択肢B, 選択肢C...<br/>
+               (※1行目に「問題」等の文字があればヘッダーとしてスキップします)
+            </p>
+            <div className="setting-item">
+              <input 
+                type="file" 
+                accept=".csv,.json" 
+                onChange={handleFileUpload}
+                disabled={uploading}
+                id="file-upload"
+                style={{display: 'none'}}
+              />
+              <label htmlFor="file-upload" className="control-btn secondary" style={{display: 'inline-block', textAlign: 'center', cursor: 'pointer', width: '100%'}}>
+                {uploading ? 'アップロード中...' : 'アップロード'}
+              </label>
+            </div>
+          </section>
+        </div>
+      </aside>
 
       <main className="main-content">
         {currentQuestion && (

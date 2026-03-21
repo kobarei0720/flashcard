@@ -25,10 +25,7 @@ description: 修正後のGit push手順（自動実行）
 ```text
 [カテゴリ] 変更概要
 
-- 変更点1
-- 変更点2
-
-Co-authored-by: Antigravity <antigravity@google.com>
+Co-authored-by: Antigravity (Claude Opus 4.6) <noreply@anthropic.com>
 ```
 
 カテゴリ例: `feat`, `fix`, `refactor`, `docs`, `chore`, `style`
