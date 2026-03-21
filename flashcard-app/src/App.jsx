@@ -57,6 +57,20 @@ function App() {
     }
   };
 
+  const handleReset = async () => {
+    if (!window.confirm('すべての回答進捗とマークをリセットしますか？この操作は取り消せません。')) {
+      return;
+    }
+
+    try {
+      await api.resetProgress();
+      alert('リセットしました。');
+      window.location.reload();
+    } catch (e) {
+      alert(`リセットに失敗しました: ${e.message}`);
+    }
+  };
+
   const setupChoices = (question, shuffle) => {
     let choices = [...question.choices];
     if (shuffle) {
@@ -183,6 +197,13 @@ function App() {
 
       <aside className={`settings-panel ${showSettings ? 'open' : 'hidden'}`}>
         <div className="settings-content">
+          <h3>データ管理</h3>
+          <div className="setting-item">
+            <button className="control-btn danger" style={{width: '100%'}} onClick={handleReset}>
+              進捗とマークをリセット
+            </button>
+          </div>
+          <hr />
           <h3>インポート</h3>
           <p style={{fontSize: '0.9em', color: '#666', marginBottom: '10px'}}>
              CSVフォーマット:<br/>問題文, 正解, 解説, 選択肢A, 選択肢B, 選択肢C...<br/>
