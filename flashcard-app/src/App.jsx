@@ -195,33 +195,46 @@ function App() {
         </div>
       </header>
 
-      <aside className={`settings-panel ${showSettings ? 'open' : 'hidden'}`}>
+      <div 
+        className={`settings-overlay ${showSettings ? 'open' : ''}`} 
+        onClick={() => setShowSettings(false)}
+      ></div>
+      <aside className={`settings-panel ${showSettings ? 'open' : ''}`}>
         <div className="settings-content">
-          <h3>データ管理</h3>
-          <div className="setting-item">
-            <button className="control-btn danger" style={{width: '100%'}} onClick={handleReset}>
-              進捗とマークをリセット
-            </button>
+          <div className="settings-header">
+            <h2>設定</h2>
+            <button className="close-btn" onClick={() => setShowSettings(false)}>✕</button>
           </div>
-          <hr />
-          <h3>インポート</h3>
-          <p style={{fontSize: '0.9em', color: '#666', marginBottom: '10px'}}>
-             CSVフォーマット:<br/>問題文, 正解, 解説, 選択肢A, 選択肢B, 選択肢C...<br/>
-             (※1行目に「問題」等の文字があればヘッダーとしてスキップします)
-          </p>
-          <div className="setting-item">
-            <input 
-              type="file" 
-              accept=".csv,.json" 
-              onChange={handleFileUpload}
-              disabled={uploading}
-              id="file-upload"
-              style={{display: 'none'}}
-            />
-            <label htmlFor="file-upload" className="control-btn secondary" style={{display: 'inline-block', textAlign: 'center', cursor: 'pointer', width: '100%'}}>
-              {uploading ? 'アップロード中...' : 'アップロード'}
-            </label>
-          </div>
+          
+          <section className="settings-section">
+            <h3>データ管理</h3>
+            <div className="setting-item">
+              <button className="control-btn danger" style={{width: '100%'}} onClick={handleReset}>
+                進捗とマークをリセット
+              </button>
+            </div>
+          </section>
+
+          <section className="settings-section">
+            <h3>インポート</h3>
+            <p className="settings-description">
+               CSVフォーマット:<br/>問題文, 正解, 解説, 選択肢A, 選択肢B, 選択肢C...<br/>
+               (※1行目に「問題」等の文字があればヘッダーとしてスキップします)
+            </p>
+            <div className="setting-item">
+              <input 
+                type="file" 
+                accept=".csv,.json" 
+                onChange={handleFileUpload}
+                disabled={uploading}
+                id="file-upload"
+                style={{display: 'none'}}
+              />
+              <label htmlFor="file-upload" className="control-btn secondary" style={{display: 'inline-block', textAlign: 'center', cursor: 'pointer', width: '100%'}}>
+                {uploading ? 'アップロード中...' : 'アップロード'}
+              </label>
+            </div>
+          </section>
         </div>
       </aside>
 
