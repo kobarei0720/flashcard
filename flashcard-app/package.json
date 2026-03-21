@@ -21,6 +21,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@capacitor/core": "^8.2.0",
+    "@capacitor/ios": "^8.2.0",
     "better-sqlite3": "^12.6.2",
     "cors": "^2.8.5",
     "express": "^5.1.0",
@@ -28,6 +30,7 @@
     "react-dom": "^19.2.4"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.2.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
