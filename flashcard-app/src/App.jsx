@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Papa from 'papaparse';
 import * as api from './js/api.js';
 
 function App() {
@@ -11,6 +12,7 @@ function App() {
   const [displayToOriginalMap, setDisplayToOriginalMap] = useState({});
   const [questionHistory, setQuestionHistory] = useState([]);
   const [showOriginal, setShowOriginal] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   useEffect(() => {
     async function loadData() {
@@ -31,6 +33,57 @@ function App() {
     }
     loadData();
   }, []);
+
+  const handleFileUpload = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: async (results) => {
+        const parsedQuestions = results.data.map((row, idx) => {
+          const choices = [];
+          ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'].forEach(lbl => {
+            const key = `選択肢${lbl}`;
+            if (row[key]) {
+              choices.push({ label: lbl, text: row[key] });
+            }
+          });
+
+          return {
+            id: `Import-${Date.now()}-${idx}`,
+            question: row['問題文'],
+            answer: row['正解'],
+            original: row['解説(原文)'] || '',
+            choices
+          };
+        }).filter(q => q.question && q.answer && q.choices.length > 0);
+
+        if (parsedQuestions.length > 0) {
+          api.saveCustomQuestions(parsedQuestions);
+          const qData = await api.fetchQuestions();
+          setQuestions(qData.questions);
+          alert(`${parsedQuestions.length}件のカスタム問題をインポートしました！`);
+        } else {
+          alert('有効な問題データが見つかりませんでした。テンプレートの列名と合致しているか確認してください。');
+        }
+      },
+      error: (error) => {
+        console.error('CSV Parse Error:', error);
+        alert('CSVの読み込みに失敗しました。');
+      }
+    });
+    event.target.value = '';
+  };
+
+  const handleReset = async () => {
+    if (confirm('すべての学習進捗をリセットしますか？この操作は取り消せません。')) {
+      const resetData = await api.resetProgress();
+      setProgress(resetData);
+      alert('進捗をリセットしました！');
+    }
+  };
 
   const setupChoices = (question, shuffle) => {
     let choices = [...question.choices];
@@ -131,7 +184,7 @@ function App() {
   return (
     <div className="app-container">
       <header className="header">
-        <h1>🎯 AWS SAP-C02 フラッシュカード</h1>
+        <h1>なんでも覚える君</h1>
         <div className="stats">
           <span className="stat-item">
             <span className="stat-label">進捗:</span>
@@ -150,8 +203,59 @@ function App() {
             <span className="stat-label">マーク:</span>
             <span id="marked-count">{progress.markedQuestions.length}</span>
           </span>
+          <button 
+            className="settings-toggle" 
+            style={{ 
+              marginLeft: 'auto', 
+              padding: '0.3rem 0.8rem', 
+              fontSize: '0.85rem', 
+              background: 'var(--glass-bg)', 
+              color: 'var(--text-primary)', 
+              border: '1px solid var(--glass-border)', 
+              borderRadius: '8px',
+              cursor: 'pointer'
+            }} 
+            onClick={() => setShowSettings(true)}
+          >
+            設定
+          </button>
         </div>
       </header>
+
+      {/* 設定サイドバー */}
+      <div className={`settings-panel ${showSettings ? 'visible' : 'hidden'}`} id="settings-panel" style={{ zIndex: 1000 }}>
+        <div className="settings-backdrop" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'transparent', zIndex: -1 }} onClick={() => setShowSettings(false)}></div>
+        <div className="settings-content" style={{ position: 'relative', zIndex: 1 }}>
+          <div className="settings-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '1rem' }}>
+            <h2 style={{ margin: 0, fontSize: '1.2rem' }}>設定 / データ管理</h2>
+            <button className="close-btn" style={{ background: 'none', border: 'none', color: 'var(--text-primary)', fontSize: '2rem', cursor: 'pointer', padding: '0 0.5rem', lineHeight: '1' }} onClick={() => setShowSettings(false)}>&times;</button>
+          </div>
+          <div className="settings-section">
+            <h3>データのインポート</h3>
+            <p className="setting-description">CSVファイルから独自の問題を追加できます。（オフライン環境に保存されます）</p>
+            <label className="control-btn secondary file-upload-label" style={{ display: 'inline-block', cursor: 'pointer', textAlign: 'center', marginBottom: '0.5rem' }}>
+              CSVファイルを選択
+              <input type="file" accept=".csv" onChange={handleFileUpload} style={{ display: 'none' }} />
+            </label>
+            <a href="#" onClick={(e) => {
+              e.preventDefault();
+              const templateContent = '問題文,正解,解説(原文),選択肢A,選択肢B,選択肢C,選択肢D,選択肢E,選択肢F,選択肢G,選択肢H\n問題例,A,解説の例,選択肢Aの内容,選択肢Bの内容,,,,,,';
+              const blob = new Blob([templateContent], { type: 'text/csv;charset=utf-8;' });
+              const url = URL.createObjectURL(blob);
+              const link = document.createElement('a');
+              link.href = url;
+              link.download = 'import_template.csv';
+              link.click();
+              URL.revokeObjectURL(url);
+            }} style={{color: 'var(--accent-primary)', fontSize: '0.9rem', display: 'block', marginTop: '0.5rem', textDecoration: 'underline'}}>テンプレート（CSV）をダウンロード</a>
+          </div>
+          <div className="settings-section">
+            <h3>学習記録のリセット</h3>
+            <p className="setting-description">正解率や問題の履歴などを初期化します。</p>
+            <button className="control-btn danger" onClick={handleReset}>進捗をリセット</button>
+          </div>
+        </div>
+      </div>
 
       <main className="main-content">
         {currentQuestion && (
@@ -163,7 +267,7 @@ function App() {
                 id="mark-btn" 
                 onClick={toggleMark} 
                 title="マークする">
-                <span className="mark-icon">⭐</span>
+                <span className="mark-icon">★</span>
               </button>
             </div>
             
@@ -209,7 +313,7 @@ function App() {
             
             <div className={`answer-section ${!isAnswered ? 'hidden' : ''}`}>
               <div className={`answer-result ${isCorrect ? 'correct' : 'incorrect'}`}>
-                {isCorrect ? '🎉 正解！' : '❌ 不正解'}
+                {isCorrect ? <>〇 正解！</> : <>× 不正解</>}
               </div>
               <div className="correct-answer">
                  正解: {currentQuestion.answer}
@@ -230,7 +334,7 @@ function App() {
             onClick={handlePrev}
             disabled={questionHistory.length === 0}
           >
-            ← 前の問題
+            &larr; 前の問題
           </button>
           {!isAnswered ? (
             <button className="control-btn primary" onClick={handleSubmit}>
@@ -238,7 +342,7 @@ function App() {
             </button>
           ) : (
             <button className="control-btn primary" onClick={handleNext}>
-              次の問題 →
+              次の問題 &rarr;
             </button>
           )}
         </div>

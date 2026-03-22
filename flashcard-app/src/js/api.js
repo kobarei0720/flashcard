@@ -5,6 +5,7 @@
  */
 
 const STORAGE_KEY = 'flashcard_progress_v1';
+const CUSTOM_Q_KEY = 'flashcard_custom_questions_v1';
 
 // Initialize default progress
 const getDefaultProgress = () => ({
@@ -32,18 +33,40 @@ const saveProgressLocal = (progress) => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
 };
 
+export function getCustomQuestions() {
+    try {
+        const saved = localStorage.getItem(CUSTOM_Q_KEY);
+        if (saved) return JSON.parse(saved);
+    } catch (e) {
+        console.error('Failed to parse local custom questions', e);
+    }
+    return [];
+}
+
+export function saveCustomQuestions(newQuestions) {
+    // 既存のカスタム問題にインポート分を追加
+    const existing = getCustomQuestions();
+    const merged = [...existing, ...newQuestions];
+    localStorage.setItem(CUSTOM_Q_KEY, JSON.stringify(merged));
+    return merged;
+}
+
 export async function fetchQuestions() {
     try {
-        // public/data/questions.json から直接ロード (ビルド時にバンドルされます)
+        // public/data/questions.json からデフォルト問題をロード
         const response = await fetch('/data/questions.json');
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
-        return data;
+        // カスタム問題を取得して結合
+        const customQ = getCustomQuestions();
+        const mergedQuestions = [...data.questions, ...customQ];
+        return { questions: mergedQuestions, totalCount: mergedQuestions.length };
     } catch (error) {
         console.error('Failed to load local questions:', error);
-        return { questions: [], totalCount: 0 };
+        const customQ = getCustomQuestions();
+        return { questions: customQ, totalCount: customQ.length };
     }
 }
 

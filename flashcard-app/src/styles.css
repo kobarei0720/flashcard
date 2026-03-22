@@ -33,6 +33,14 @@ body {
     line-height: 1.6;
 }
 
+button, input, select, textarea {
+    font-family: inherit;
+}
+
+.emoji-icon {
+    font-family: "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji", emoji;
+}
+
 /* ========================================
    ヘッダー
    ======================================== */
@@ -42,6 +50,7 @@ body {
     backdrop-filter: blur(10px);
     border-bottom: 1px solid var(--glass-border);
     padding: 1rem 2rem;
+    padding-top: calc(1rem + env(safe-area-inset-top));
     display: flex;
     justify-content: space-between;
     align-items: center;
