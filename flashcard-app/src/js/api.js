@@ -53,20 +53,12 @@ export function saveCustomQuestions(newQuestions) {
 
 export async function fetchQuestions() {
     try {
-        // public/data/questions.json からデフォルト問題をロード
-        const response = await fetch('/data/questions.json');
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-        // カスタム問題を取得して結合
-        const customQ = getCustomQuestions();
-        const mergedQuestions = [...data.questions, ...customQ];
-        return { questions: mergedQuestions, totalCount: mergedQuestions.length };
-    } catch (error) {
-        console.error('Failed to load local questions:', error);
+        // カスタム問題（インポートされた問題）のみを取得
         const customQ = getCustomQuestions();
         return { questions: customQ, totalCount: customQ.length };
+    } catch (error) {
+        console.error('Failed to load custom questions:', error);
+        return { questions: [], totalCount: 0 };
     }
 }
 

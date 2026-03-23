@@ -175,7 +175,7 @@ function App() {
     }));
   };
 
-  if (!questions.length || !progress) {
+  if (!progress) {
     return <div>読み込み中...</div>;
   }
 
@@ -249,14 +249,27 @@ function App() {
               URL.revokeObjectURL(url);
             }} style={{color: 'var(--accent-primary)', fontSize: '0.9rem', display: 'block', marginTop: '0.5rem', textDecoration: 'underline'}}>テンプレート（CSV）をダウンロード</a>
           </div>
-          <div className="settings-section">
-            <h3>学習記録のリセット</h3>
-            <p className="setting-description">正解率や問題の履歴などを初期化します。</p>
-            <button className="control-btn danger" onClick={handleReset}>進捗をリセット</button>
-          </div>
+          {questions.length > 0 && (
+            <div className="settings-section">
+              <h3>学習記録のリセット</h3>
+              <p className="setting-description">正解率や問題の履歴などを初期化します。</p>
+              <button className="control-btn danger" onClick={handleReset}>進捗をリセット</button>
+            </div>
+          )}
         </div>
       </div>
 
+      {questions.length === 0 ? (
+        <main className="main-content" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '4rem 1rem' }}>
+          <h2 style={{ marginBottom: '1rem' }}>問題がインポートされていません</h2>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>
+            右上の「設定」から自作のCSVファイルをインポートして、学習を始めましょう。
+          </p>
+          <button className="control-btn primary" onClick={() => setShowSettings(true)}>
+            設定を開く
+          </button>
+        </main>
+      ) : (
       <main className="main-content">
         {currentQuestion && (
           <div className={`question-card ${isMarked ? 'marked' : ''}`} id="question-card">
@@ -347,6 +360,7 @@ function App() {
           )}
         </div>
       </main>
+      )}
     </div>
   );
 }
