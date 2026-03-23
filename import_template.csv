@@ -1,0 +1,4 @@
+問題文,正解,解説(原文),選択肢A,選択肢B,選択肢C,選択肢D
+"AWSのサーバーレスコンピューティングサービスはどれですか？","A","AWS Lambdaは、サーバーのプロビジョニングや管理なしでコードを実行できるサーバーレスコンピューティングサービスです。","AWS Lambda","Amazon EC2","Amazon S3","AWS IAM"
+"高い耐久性と可用性を備えたオブジェクトストレージサービスはどれですか？","C","Amazon S3は、業界をリードするスケーラビリティ、データ可用性、セキュリティ、およびパフォーマンスを提供するオブジェクトストレージサービスです。","Amazon EBS","Amazon Redshift","Amazon S3","Amazon Route 53"
+"NoSQLデータベースサービスはどれですか？","B","Amazon DynamoDBは、あらゆる規模で10ミリ秒未満のパフォーマンスを実現する、キーバリューおよびドキュメントデータベースです。","Amazon RDS","Amazon DynamoDB","Amazon Aurora","Amazon ElastiCache"

@@ -1,9 +1,9 @@
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import App from './App.jsx';
-import * as api from './js/api.js';
+import * as api from './apiClient.js';
 
 // Mock the API module
-vi.mock('./js/api.js', () => ({
+vi.mock('./apiClient.js', () => ({
   fetchQuestions: vi.fn(),
   fetchProgress: vi.fn(),
   toggleMark: vi.fn(),
