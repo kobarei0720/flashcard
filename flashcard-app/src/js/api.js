@@ -120,3 +120,10 @@ export async function resetProgress() {
     saveProgressLocal(defaultProgress);
     return defaultProgress;
 }
+
+export async function clearCustomQuestions() {
+    localStorage.removeItem(CUSTOM_Q_KEY);
+    const defaultProgress = getDefaultProgress();
+    saveProgressLocal(defaultProgress);
+    return { questions: sampleQuestions, progress: defaultProgress };
+}

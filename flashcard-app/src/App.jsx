@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Papa from 'papaparse';
 import * as api from './js/api.js';
+import sampleQuestions from './js/sampleQuestions.js';
 
 function App() {
   const [questions, setQuestions] = useState([]);
@@ -14,6 +15,8 @@ function App() {
   const [showOriginal, setShowOriginal] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [sessionStats, setSessionStats] = useState({ correct: 0, incorrect: 0, total: 0 });
+  const [showResults, setShowResults] = useState(false);
 
   useEffect(() => {
     async function loadData() {
@@ -27,6 +30,7 @@ function App() {
         if (qData.questions.length > 0) {
           setCurrentQuestion(qData.questions[0]);
           setupChoices(qData.questions[0], pData.settings.shuffleChoices);
+          setSessionStats({ correct: 0, incorrect: 0, total: qData.questions.length });
         }
       } catch (error) {
         console.error('Failed to load data', error);
@@ -63,27 +67,26 @@ function App() {
         }).filter(q => q.question && q.answer && q.choices.length > 0);
 
         if (parsedQuestions.length > 0) {
-          // 既存のカスタム問題をクリアしてから新しい問題を保存
           localStorage.removeItem('flashcard_custom_questions_v1');
           api.saveCustomQuestions(parsedQuestions);
           const qData = await api.fetchQuestions();
           setQuestions(qData.questions);
           
-          // インポート後にすぐ表示されるようにセット
           if (qData.questions.length > 0) {
             const firstQ = qData.questions[0];
             setCurrentQuestion(firstQ);
             setupChoices(firstQ, progress.settings.shuffleChoices);
+            setSessionStats({ correct: 0, incorrect: 0, total: qData.questions.length });
+            setShowResults(false);
           }
           
-          // 進捗もリセット（新しい問題セットなので）
           const resetData = await api.resetProgress();
           setProgress(resetData);
           
           setShowSettings(false);
           alert(`${parsedQuestions.length}件の問題をインポートしました！`);
         } else {
-          alert('有効な問題データが見つかりませんでした。列名を確認してください（問題文, 正解, 選択肢A...）');
+          alert('有効な問題データが見つかりませんでした。');
         }
         setUploading(false);
       },
@@ -97,10 +100,30 @@ function App() {
   };
 
   const handleReset = async () => {
-    if (confirm('すべての回答進捗とマークをリセットしますか？この操作は取り消せません。')) {
+    if (confirm('すべての回答進捗とマークをリセットしますか？')) {
       const resetData = await api.resetProgress();
       setProgress(resetData);
+      setSessionStats(prev => ({ ...prev, correct: 0, incorrect: 0 }));
       alert('リセットしました！');
+    }
+  };
+
+  const handleResetToDefault = async () => {
+    if (confirm('データを完全に消去してサンプルに戻しますか？')) {
+      const res = await api.clearCustomQuestions();
+      setQuestions(res.questions);
+      setProgress(res.progress);
+      setQuestionHistory([]);
+      setSessionStats({ correct: 0, incorrect: 0, total: res.questions.length });
+      setCurrentQuestion(res.questions[0]);
+      setupChoices(res.questions[0], res.progress.settings.shuffleChoices);
+      setSelectedChoices([]);
+      setIsAnswered(false);
+      setIsCorrect(null);
+      setShowOriginal(false);
+      setShowResults(false);
+      setShowSettings(false);
+      alert('初期状態にリセットしました！');
     }
   };
 
@@ -146,6 +169,12 @@ function App() {
     const correct = JSON.stringify(userOriginalAnswers) === JSON.stringify(sortedCorrect);
     setIsCorrect(correct);
 
+    setSessionStats(prev => ({
+      ...prev,
+      correct: prev.correct + (correct ? 1 : 0),
+      incorrect: prev.incorrect + (correct ? 0 : 1)
+    }));
+
     const newProgress = await api.recordAnswer(currentQuestion.id, correct);
     if (newProgress && newProgress.stats) {
       setProgress(prev => ({
@@ -163,8 +192,14 @@ function App() {
   };
 
   const handleNext = () => {
+    const currentIndex = questions.findIndex(q => q.id === currentQuestion.id);
+    if (currentIndex === questions.length - 1) {
+      setShowResults(true);
+      return;
+    }
+
     setQuestionHistory([...questionHistory, currentQuestion]);
-    const nextQ = questions[Math.floor(Math.random() * questions.length)];
+    const nextQ = questions[currentIndex + 1];
     setCurrentQuestion(nextQ);
     setupChoices(nextQ, progress.settings.shuffleChoices);
     setSelectedChoices([]);
@@ -185,6 +220,18 @@ function App() {
     setShowOriginal(false);
   };
 
+  const restartSession = () => {
+    setQuestionHistory([]);
+    setCurrentQuestion(questions[0]);
+    setupChoices(questions[0], progress.settings.shuffleChoices);
+    setSelectedChoices([]);
+    setIsAnswered(false);
+    setIsCorrect(null);
+    setShowOriginal(false);
+    setShowResults(false);
+    setSessionStats(prev => ({ ...prev, correct: 0, incorrect: 0 }));
+  };
+
   const toggleMark = async () => {
     const res = await api.toggleMark(currentQuestion.id);
     setProgress(prev => ({
@@ -200,187 +247,131 @@ function App() {
   }
 
   const isMarked = progress.markedQuestions.includes(currentQuestion?.id);
+  const currentIndex = questions.findIndex(q => q.id === currentQuestion?.id);
+  const isLastQuestion = currentIndex === questions.length - 1;
 
   return (
     <div className="app-container">
       <header className="header">
         <h1>なんでも覚える君</h1>
-        <div className="stats">
+        <div className="stats" style={{ display: showResults ? 'none' : 'flex' }}>
           <span className="stat-item">
             <span className="stat-label">進捗:</span>
-            <span id="progress-count" data-testid="progress-count">{progress.stats.totalAnswered}</span>/
-            <span id="total-count">{questions.length}</span>
+            <span>{progress.stats.totalAnswered}</span>/
+            <span>{questions.length}</span>
           </span>
           <span className="stat-item">
             <span className="stat-label">正解率:</span>
-            <span id="accuracy">
+            <span>
               {progress.stats.totalAnswered > 0 
                 ? Math.round((progress.stats.correctCount / progress.stats.totalAnswered) * 100) 
                 : 0}%
             </span>
           </span>
-          <span className="stat-item marked">
-            <span className="stat-label">マーク:</span>
-            <span id="marked-count">{progress.markedQuestions.length}</span>
-          </span>
-          <button 
-            className="settings-toggle" 
-            style={{ 
-              marginLeft: 'auto', 
-              padding: '0.4rem 0.8rem', 
-              fontSize: '0.85rem', 
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.4rem'
-            }} 
-            onClick={() => setShowSettings(true)}
-          >
-            ⚙️ 設定
-          </button>
+          <button className="settings-toggle" onClick={() => setShowSettings(true)}>⚙️ 設定</button>
         </div>
       </header>
 
-      {/* 設定オーバーレイ */}
-      <div 
-        className={`settings-overlay ${showSettings ? 'open' : ''}`} 
-        onClick={() => setShowSettings(false)}
-      ></div>
-
-      {/* 設定サイドバー */}
+      <div className={`settings-overlay ${showSettings ? 'open' : ''}`} onClick={() => setShowSettings(false)}></div>
       <aside className={`settings-panel ${showSettings ? 'open' : ''}`}>
         <div className="settings-content">
           <div className="settings-header">
             <h2>設定 / データ管理</h2>
             <button className="close-btn" onClick={() => setShowSettings(false)}>&times;</button>
           </div>
-          
           <div className="settings-section">
             <h3>データのインポート</h3>
-            <p className="settings-description">CSVファイルから問題を追加できます。</p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
-              <label className="control-btn secondary" style={{ display: 'block', cursor: 'pointer', textAlign: 'center' }}>
-                {uploading ? 'インポート中...' : 'CSVファイルを選択'}
-                <input type="file" accept=".csv" onChange={handleFileUpload} disabled={uploading} style={{ display: 'none' }} />
-              </label>
-              <a href="#" onClick={(e) => {
-                e.preventDefault();
-                const templateContent = '問題文,正解,解説(原文),選択肢A,選択肢B,選択肢C,選択肢D,選択肢E,選択肢F,選択肢G,選択肢H\n問題例,A,解説の例,選択肢Aの内容,選択肢Bの内容,,,,,,';
-                const blob = new Blob([templateContent], { type: 'text/csv;charset=utf-8;' });
-                const url = URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = 'import_template.csv';
-                link.click();
-                URL.revokeObjectURL(url);
-              }} style={{color: 'var(--accent-primary)', fontSize: '0.85rem', textAlign: 'center', textDecoration: 'underline'}}>テンプレートをダウンロード</a>
-            </div>
+            <label className="control-btn secondary" style={{ display: 'block', cursor: 'pointer', textAlign: 'center' }}>
+              {uploading ? 'インポート中...' : 'CSVファイルを選択'}
+              <input type="file" accept=".csv" onChange={handleFileUpload} disabled={uploading} style={{ display: 'none' }} />
+            </label>
           </div>
-          
           <div className="settings-section">
             <h3>学習記録のリセット</h3>
-            <p className="settings-description">正解率や問題の履歴などを初期化します。</p>
-            <button className="control-btn danger" style={{ width: '100%' }} onClick={handleReset}>進捗をリセット</button>
+            <button className="control-btn secondary" style={{ width: '100%', marginBottom: '0.8rem' }} onClick={handleReset}>進捗のみリセット</button>
+            <button className="control-btn danger" style={{ width: '100%' }} onClick={handleResetToDefault}>初期サンプルに戻す</button>
           </div>
         </div>
       </aside>
 
       {questions.length === 0 ? (
-        <main className="main-content" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '4rem 1rem' }}>
-          <h2 style={{ marginBottom: '1rem' }}>問題が読み込まれていません</h2>
-          <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>
-            設定からCSVファイルをインポートして、学習を始めましょう。
-          </p>
-          <button className="control-btn primary" onClick={() => setShowSettings(true)}>
-            設定を開く
-          </button>
+        <main className="main-content" style={{ textAlign: 'center', padding: '4rem 1rem' }}>
+          <h2>問題がありません</h2>
+          <button className="control-btn primary" onClick={() => setShowSettings(true)}>設定を開く</button>
+        </main>
+      ) : showResults ? (
+        <main className="main-content">
+          <div className="question-card" style={{ textAlign: 'center', padding: '3rem 2rem' }}>
+            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🎉</div>
+            <h2 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>学習完了！</h2>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>お疲れ様でした！今回の結果です。</p>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '2rem' }}>
+              <div style={{ padding: '1rem', background: 'var(--bg-secondary)', borderRadius: '12px' }}>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>正解</div>
+                <div style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--accent-success)' }}>{sessionStats.correct}</div>
+              </div>
+              <div style={{ padding: '1rem', background: 'var(--bg-secondary)', borderRadius: '12px' }}>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>不正解</div>
+                <div style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--accent-danger)' }}>{sessionStats.incorrect}</div>
+              </div>
+              <div style={{ padding: '1rem', background: 'var(--bg-secondary)', borderRadius: '12px', gridColumn: 'span 2' }}>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>正答率</div>
+                <div style={{ fontSize: '2rem', fontWeight: '900', color: 'var(--accent-primary)' }}>
+                  {Math.round((sessionStats.correct / (sessionStats.correct + sessionStats.incorrect)) * 100) || 0}%
+                </div>
+              </div>
+            </div>
+
+            <button className="control-btn primary" style={{ width: '100%' }} onClick={restartSession}>もう一度解く</button>
+          </div>
         </main>
       ) : (
       <main className="main-content">
         {currentQuestion && (
           <div className={`question-card ${isMarked ? 'marked' : ''}`}>
             <div className="question-header">
-              <span className="question-number">問題 {questions.findIndex(q => q.id === currentQuestion.id) + 1}</span>
-              <button 
-                className={`mark-btn ${isMarked ? 'active' : ''}`} 
-                onClick={toggleMark} 
-                title="マークする">
-                <span className="mark-icon">★</span>
-              </button>
+              <span className="question-number">問題 {currentIndex + 1} / {questions.length}</span>
+              <button className={`mark-btn ${isMarked ? 'active' : ''}`} onClick={toggleMark} title="マークする">★</button>
             </div>
-            
-            <div className="question-text">
-              {currentQuestion.question}
-            </div>
-            
+            <div className="question-text">{currentQuestion.question}</div>
             <div className="choices">
               {Object.keys(displayToOriginalMap).map((displayLabel) => {
                 const choiceInfo = displayToOriginalMap[displayLabel];
                 const originalLabel = choiceInfo.label;
-                const correctAnswers = currentQuestion.answer.includes(',') ? 
-                  currentQuestion.answer.split(',').map(a => a.trim()) : 
-                  currentQuestion.answer.split('').filter(a => a.trim() !== '');
-                
                 let extraClass = '';
                 if (isAnswered) {
-                  const isCorrectAnswer = correctAnswers.includes(originalLabel);
-                  const isSelected = selectedChoices.includes(displayLabel);
-                  
-                  if (isCorrectAnswer) extraClass = 'correct';
-                  else if (isSelected) extraClass = 'incorrect';
-                  
+                  const correctAnswers = currentQuestion.answer.includes(',') ? currentQuestion.answer.split(',').map(a => a.trim()) : [currentQuestion.answer.trim()];
+                  if (correctAnswers.includes(originalLabel)) extraClass = 'correct';
+                  else if (selectedChoices.includes(displayLabel)) extraClass = 'incorrect';
                   extraClass += ' disabled';
-                } else {
-                  if (selectedChoices.includes(displayLabel)) {
-                    extraClass = 'selected';
-                  }
+                } else if (selectedChoices.includes(displayLabel)) {
+                  extraClass = 'selected';
                 }
-
                 return (
-                  <div 
-                    key={displayLabel} 
-                    className={`choice-item ${extraClass}`}
-                    onClick={() => handleSelectChoice(displayLabel)}
-                  >
+                  <div key={displayLabel} className={`choice-item ${extraClass}`} onClick={() => handleSelectChoice(displayLabel)}>
                     <span className="choice-label">{displayLabel}</span>
                     <span className="choice-text">{choiceInfo.text}</span>
                   </div>
                 );
               })}
             </div>
-            
             <div className={`answer-section ${!isAnswered ? 'hidden' : ''}`}>
               <div className={`answer-result ${isCorrect ? 'correct' : 'incorrect'}`}>
-                {isCorrect ? <>〇 正解！</> : <>× 不正解</>}
+                {isCorrect ? '〇 正解！' : '× 不正解'}
               </div>
-              <div className="correct-answer">
-                 正解: {currentQuestion.answer}
-              </div>
-              <button className="show-original-btn" onClick={() => setShowOriginal(!showOriginal)}>
-                原文を表示
-              </button>
-              <div className={`original-text ${!showOriginal ? 'hidden' : ''}`}>
-                {currentQuestion.original || '原文データがありません'}
-              </div>
+              <div className="correct-answer">正解: {currentQuestion.answer}</div>
+              <button className="show-original-btn" onClick={() => setShowOriginal(!showOriginal)}>原文を表示</button>
+              <div className={`original-text ${!showOriginal ? 'hidden' : ''}`}>{currentQuestion.original || '原文なし'}</div>
             </div>
           </div>
         )}
-
         <div className="controls">
-          <button 
-            className="control-btn secondary" 
-            onClick={handlePrev}
-            disabled={questionHistory.length === 0}
-          >
-            &larr; 前へ
-          </button>
+          <button className="control-btn secondary" onClick={handlePrev} disabled={questionHistory.length === 0}>&larr; 前へ</button>
           {!isAnswered ? (
-            <button className="control-btn primary" onClick={handleSubmit}>
-              回答する
-            </button>
+            <button className="control-btn primary" onClick={handleSubmit}>回答する</button>
           ) : (
-            <button className="control-btn primary" onClick={handleNext}>
-              次へ &rarr;
-            </button>
+            <button className="control-btn primary" onClick={handleNext}>{isLastQuestion ? '結果を見る' : '次へ'} &rarr;</button>
           )}
         </div>
       </main>
