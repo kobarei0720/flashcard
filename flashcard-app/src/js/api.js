@@ -4,6 +4,8 @@
  * Saves progress and settings to localStorage.
  */
 
+import sampleQuestions from './sampleQuestions.js';
+
 const STORAGE_KEY = 'flashcard_progress_v1';
 const CUSTOM_Q_KEY = 'flashcard_custom_questions_v1';
 
@@ -53,12 +55,19 @@ export function saveCustomQuestions(newQuestions) {
 
 export async function fetchQuestions() {
     try {
-        // カスタム問題（インポートされた問題）のみを取得
+        // カスタム問題（インポートされた問題）を取得
         const customQ = getCustomQuestions();
-        return { questions: customQ, totalCount: customQ.length };
+
+        // カスタム問題がある場合はそちらを優先、なければサンプル問題を返す
+        if (customQ.length > 0) {
+            return { questions: customQ, totalCount: customQ.length };
+        }
+
+        // デフォルト: サンプル問題を表示
+        return { questions: sampleQuestions, totalCount: sampleQuestions.length };
     } catch (error) {
-        console.error('Failed to load custom questions:', error);
-        return { questions: [], totalCount: 0 };
+        console.error('Failed to load questions:', error);
+        return { questions: sampleQuestions, totalCount: sampleQuestions.length };
     }
 }
 

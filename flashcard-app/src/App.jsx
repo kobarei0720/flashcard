@@ -63,17 +63,24 @@ function App() {
         }).filter(q => q.question && q.answer && q.choices.length > 0);
 
         if (parsedQuestions.length > 0) {
+          // 既存のカスタム問題をクリアしてから新しい問題を保存
+          localStorage.removeItem('flashcard_custom_questions_v1');
           api.saveCustomQuestions(parsedQuestions);
           const qData = await api.fetchQuestions();
           setQuestions(qData.questions);
           
-          // 初回インポート時やリセット後にすぐ表示されるようにセット
+          // インポート後にすぐ表示されるようにセット
           if (qData.questions.length > 0) {
             const firstQ = qData.questions[0];
             setCurrentQuestion(firstQ);
             setupChoices(firstQ, progress.settings.shuffleChoices);
           }
           
+          // 進捗もリセット（新しい問題セットなので）
+          const resetData = await api.resetProgress();
+          setProgress(resetData);
+          
+          setShowSettings(false);
           alert(`${parsedQuestions.length}件の問題をインポートしました！`);
         } else {
           alert('有効な問題データが見つかりませんでした。列名を確認してください（問題文, 正解, 選択肢A...）');
