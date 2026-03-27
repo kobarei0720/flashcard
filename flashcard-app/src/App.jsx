@@ -66,6 +66,14 @@ function App() {
           api.saveCustomQuestions(parsedQuestions);
           const qData = await api.fetchQuestions();
           setQuestions(qData.questions);
+          
+          // 初回インポート時やリセット後にすぐ表示されるようにセット
+          if (qData.questions.length > 0) {
+            const firstQ = qData.questions[0];
+            setCurrentQuestion(firstQ);
+            setupChoices(firstQ, progress.settings.shuffleChoices);
+          }
+          
           alert(`${parsedQuestions.length}件の問題をインポートしました！`);
         } else {
           alert('有効な問題データが見つかりませんでした。列名を確認してください（問題文, 正解, 選択肢A...）');
@@ -225,20 +233,25 @@ function App() {
         </div>
       </header>
 
+      {/* 設定オーバーレイ */}
+      <div 
+        className={`settings-overlay ${showSettings ? 'open' : ''}`} 
+        onClick={() => setShowSettings(false)}
+      ></div>
+
       {/* 設定サイドバー */}
-      <div className={`settings-panel ${showSettings ? 'visible' : 'hidden'}`} id="settings-panel" style={{ zIndex: 1000 }}>
-        <div className="settings-backdrop" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.3)', zIndex: -1 }} onClick={() => setShowSettings(false)}></div>
-        <div className="settings-content" style={{ position: 'relative', zIndex: 1 }}>
-          <div className="settings-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid var(--glass-border)', paddingBottom: '1rem' }}>
-            <h2 style={{ margin: 0, fontSize: '1.2rem' }}>設定 / データ管理</h2>
-            <button className="close-btn" style={{ background: 'none', border: 'none', color: 'var(--text-primary)', fontSize: '2rem', cursor: 'pointer', padding: '0 0.5rem', lineHeight: '1' }} onClick={() => setShowSettings(false)}>&times;</button>
+      <aside className={`settings-panel ${showSettings ? 'open' : ''}`}>
+        <div className="settings-content">
+          <div className="settings-header">
+            <h2>設定 / データ管理</h2>
+            <button className="close-btn" onClick={() => setShowSettings(false)}>&times;</button>
           </div>
           
           <div className="settings-section">
             <h3>データのインポート</h3>
-            <p className="setting-description">CSVファイルから問題を追加できます。</p>
+            <p className="settings-description">CSVファイルから問題を追加できます。</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
-              <label className="control-btn secondary file-upload-label" style={{ display: 'block', cursor: 'pointer', textAlign: 'center' }}>
+              <label className="control-btn secondary" style={{ display: 'block', cursor: 'pointer', textAlign: 'center' }}>
                 {uploading ? 'インポート中...' : 'CSVファイルを選択'}
                 <input type="file" accept=".csv" onChange={handleFileUpload} disabled={uploading} style={{ display: 'none' }} />
               </label>
@@ -258,17 +271,17 @@ function App() {
           
           <div className="settings-section">
             <h3>学習記録のリセット</h3>
-            <p className="setting-description">正解率や問題の履歴などを初期化します。</p>
+            <p className="settings-description">正解率や問題の履歴などを初期化します。</p>
             <button className="control-btn danger" style={{ width: '100%' }} onClick={handleReset}>進捗をリセット</button>
           </div>
         </div>
-      </div>
+      </aside>
 
       {questions.length === 0 ? (
         <main className="main-content" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '4rem 1rem' }}>
-          <h2 style={{ marginBottom: '1rem' }}>問題がありません</h2>
+          <h2 style={{ marginBottom: '1rem' }}>問題が読み込まれていません</h2>
           <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>
-            設定からCSVファイルをインポートするか、<br/>デフォルトの問題セットを読み込んでください。
+            設定からCSVファイルをインポートして、学習を始めましょう。
           </p>
           <button className="control-btn primary" onClick={() => setShowSettings(true)}>
             設定を開く
@@ -279,7 +292,7 @@ function App() {
         {currentQuestion && (
           <div className={`question-card ${isMarked ? 'marked' : ''}`}>
             <div className="question-header">
-              <span className="question-number">問題 {currentQuestion.id}</span>
+              <span className="question-number">問題 {questions.findIndex(q => q.id === currentQuestion.id) + 1}</span>
               <button 
                 className={`mark-btn ${isMarked ? 'active' : ''}`} 
                 onClick={toggleMark} 
